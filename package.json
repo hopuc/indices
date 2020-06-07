@@ -1,6 +1,6 @@
 {
   "name": "indices",
-  "version": "0.0.1",
+  "version": "0.0.3",
   "description": "indices of mineral dressing",
   "productName": "Indicea App",
   "cordovaId": "org.cordova.quasar.app",
