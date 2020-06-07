@@ -1,0 +1,1 @@
+.my-sticky-header-table thead tr th{position:sticky;z-index:1}.my-sticky-header-table .q-table__middle{max-height:200px}.q-table__bottom,.q-table__top,thead tr:first-child th{background-color:#fafafa}thead tr:first-child th{top:0}.my-sticky-header-table .q-table--loading thead tr:last-child th{top:48px}
