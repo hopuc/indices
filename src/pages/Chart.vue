@@ -1,8 +1,8 @@
 <template>
   <div class="chart">
 
-    <div id="chart-cuc-cu" style="width:90%;height:500px;"></div>
-    <div id="chart-cuc-rec" style="width:90%;height:500px;"></div>
+    <div id="chart-cuc-cu" style="width:cacl(90% - 100px);height:500px;"></div>
+    <div id="chart-cuc-rec" style="width:cacl(90% - 100px);height:500px;"></div>
 
     <q-select
       v-model="chart"
@@ -12,7 +12,7 @@
       style="max-width: 200px;margin: 6px;"
     />
 
-    <div id="chart" style="width:90%;height:500px;"></div>
+    <div id="chart" style="width:cacl(90% - 100px);height:500px;"></div>
   </div>
 </template>
 
