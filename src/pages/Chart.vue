@@ -21,7 +21,7 @@
   import echarts from 'echarts/lib/echarts'
   import 'echarts/lib/chart/line'
   import 'echarts/lib/component/title'
-  import 'echarts/lib/component/markline.js'
+  import 'echarts/lib/component/markLine'
   export default {
     data(){
       return{
