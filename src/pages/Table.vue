@@ -53,7 +53,8 @@
     <q-table
       class="my-sticky-header-table"
       title="Indices"
-      :data="json"
+      virtual-scroll
+      :data="show"
       :columns="columns"
       row-key="id"
       :selected-rows-label="getSelectedString"
@@ -61,7 +62,6 @@
       :selected.sync="selected"
       :visible-columns="visibleColumns"
       :table-style="tableFullscreen?'max-height: 100vh':'max-height: calc(100vh - 164px)'"
-      virtual-scroll
       :pagination.sync="pagination"
       :rows-per-page-options="[0]"
       :hide-bottom="true"
@@ -75,20 +75,35 @@
 
         <!-- <q-space /> -->
 
+        <div class="q-gutter-md row">
         <q-select
           v-model="visibleColumns"
           multiple
+          filled
           dense
           options-dense
-          filled
           display-value="显示内容"
           emit-value
           map-options
           :options="columns"
           option-value="name"
-          style="min-width: 120px"
+          style="min-width: 130px"
         />
 
+        <!-- <q-select
+          v-model="month"
+          filled
+          dense
+          options-dense
+          label="显示月份"
+          :options="monthOptions"
+          style="min-width: 130px"
+        >
+          <template v-if="month" v-slot:append>
+            <q-icon name="cancel" @click.stop="month = null" class="cursor-pointer" size="18px" />
+          </template>
+        </q-select> -->
+        </div>
         <q-space />
 
         <!-- <q-icon class="q-ml-xs" name="unfold_more" /> -->
@@ -124,6 +139,18 @@
           class="q-ml-md"
         >
           <q-icon size="21px" name="save_alt" />
+          <!-- <div>Label</div> -->
+        </q-btn>
+
+        <q-btn
+          dense
+          flat
+          round
+          color=""
+          @click="deleteRow()"
+          class="q-ml-md"
+        >
+          <q-icon size="21px" name="delete" />
           <!-- <div>Label</div> -->
         </q-btn>
 
@@ -177,6 +204,47 @@
           </q-td>
         </q-tr>
       </template> -->
+
+      <!-- <template v-slot:top-row>
+        <q-tr>
+          <q-td colspan="100%">
+            Top row
+          </q-td>
+        </q-tr>
+      </template> -->
+
+      <!-- <template v-slot:bottom-row="props"> -->
+        <!-- <q-tr>
+          <q-td colspan="100%">
+            Bottom row
+          </q-td>
+        </q-tr> -->
+
+        <!-- <q-tr> -->
+          <!-- <q-td>
+            <q-checkbox
+              toggle-indeterminate
+              label="全选"
+              class="vbot-check-all"
+            >
+            </q-checkbox>
+          </q-td> -->
+          <!-- <q-td>
+            {{total.id}}
+          </q-td> -->
+          <!-- <q-td key="date">
+            {{total.date}}
+          </q-td> -->
+          <!-- <q-td v-for="(column,i) of columns" :key="column.name" :props="props"> -->
+            <!-- {{column.name}} -->
+            <!-- {{total[column.name]}} -->
+            <!-- <q-popup-edit v-if="column.writable" v-model="props.row[column.name]" title="Update data" buttons>
+              <q-input type="number" v-model="props.row[column.name]" dense autofocus />
+            </q-popup-edit> -->
+          <!-- </q-td>
+        </q-tr>
+      </template> -->
+
       <!-- <template v-slot:bottom="props"> -->
         <!-- <q-tr>
           <q-td colspan="100%">
@@ -210,6 +278,46 @@
 
     </q-table>
 
+    <!-- <q-td v-for="(column,i) of columns" :key="column.name" :props="props">
+      {{total[column.name]}}
+    </q-td> -->
+
+    <!-- <div class="q-pa-md">
+        <q-table
+          title="Treats"
+          :data="show"
+          :columns="columns"
+          row-key="name"
+          selection="multiple"
+          :selected.sync="selected"
+        >
+
+          <template v-slot:top>
+            Top
+          </template>
+          <template v-slot:top-row>
+            <q-tr>
+              <q-td colspan="100%">
+                Top row
+              </q-td>
+            </q-tr>
+          </template>
+
+          <template v-slot:bottom-row>
+            <q-tr>
+              <q-td colspan="100%">
+                Bottom row
+              </q-td>
+            </q-tr>
+          </template>
+
+          <template v-slot:bottom>
+            Bottom
+          </template>
+
+        </q-table>
+      </div> -->
+
   </div>
 
 </template>
@@ -219,10 +327,11 @@
 	// import json from '202005.json'
 
 	export default {
-		name: 'App',
+		name: 'Table',
 		components: {
 			// HelloWorld
 		},
+    props: ['showData','columns'],
 		data() {
 			return {
 				// index: 'table',
@@ -538,25 +647,17 @@
 						}
 					}],
 				},
-        menuList: [{
-          icon: 'inbox',
-          label: 'Inbox',
-          separator: true
-        },
-        {
-          icon: 'send',
-          label: 'Outbox',
-          separator: false
-        }],
-        columns: [],
+        // columns: [],
         visibleColumns: ['date', 'shift', 'raw_qty', 'raw_cu', 'cuc_cu', 'cut_cu', 'cuc_rec', 'cuc_qty_metal', 'fec_fe', 'fec_qty', 'fet_mfe'],
         selected: [],
 				allData: [],
-				json: [],
+        month: null,
+        monthOptions: [],
+        // monthData: [],
+				show: [],
         pagination: {
           rowsPerPage: 0
         },
-				// selectedData: [],
 				total: {},
 				totalText: '',
 				addText: '',
@@ -568,60 +669,33 @@
 
 		},
 		watch:{
-			// json:{
-			// handler() {
-			// 	// this.calculateData()
-			// 	// console.log(newName)
-			// 	// console.log(oldName)
-			// 	// console.log('json changed')
-			// },
-			// deep: true,
-			// immediate: true,
-			// },
-			/* index:function(){
-				if(this.index=='table'){
-					this.notice('table','已打开操作面板！')
-				}else if(this.index=='chart'){
-					this.echarts()
-					this.echartsSelect()
-					this.notice('chart','chart')
-				}
-			}, */
-			/* alias:function (){
-				if(this.alias){
-					localStorage.setItem('alias', 'true')
-					this.notice('打开成功','已打开简称模式')
-				}else{
-					localStorage.setItem('alias', 'false')
-					this.notice('关闭成功','已关闭简称模式')
-				}
-			},
-			panel:function(){
-				if(this.panel){
-					// this.panel = false
-					localStorage.setItem('panel', 'true')
-					this.notice('打开成功','已打开操作面板')
-				}else{
-					// this.panel = true
-					localStorage.setItem('panel', 'false')
-					this.notice('关闭成功','已关闭操作面板')
-				}
-			},
-			fixed:function(){
-				if(this.fixed){
-					localStorage.setItem('fixed', 'true')
-					this.notice('打开成功','已固定表格日期')
-				}else{
-					localStorage.setItem('fixed', 'false')
-					this.notice('关闭成功','已取消固定表格日期')
-				}
-			},
-			chart:function(){
-				this.echartsSelect()
-			}, */
-      selected:function(){
-        this.totalData('select')
-      	// this.echartsSelect()
+      // indicesData:function(){
+      //   this.getData()
+      // },
+      // month:function(n){
+      //   this.selected = []
+      //   if(n){
+      //     this.show = this.monthData[n.value-1]
+      //   }else{
+      //     this.show = this.allData
+      //   }
+      //   this.totalData('show')
+      // },
+      showData:function(n){
+        this.selected = []
+        this.show = n
+        this.loading = false
+        /* if(n){
+          this.show = this.monthData[n.value-1]
+        }else{
+          this.show = this.allData
+        } */
+        // this.totalData('show')
+      },
+      selected:function(e){
+        if(e.length!==0){
+          this.totalData('select')
+        }
       },
 		},
 		created: function() {
@@ -638,30 +712,30 @@
 
       // console.log(this.$q.lang)
 
-      for(var i in this.indices){
-        // this.columns[i] =
-        // console.log(i,this.indices[i])
-        this.columns.push({
-            name: i,
-            label: this.indices[i].name,
-            field: i,
-            align: 'left',
-            // required: true,
-            sortable: true,
-            decimal: this.indices[i].decimal,
-            writable: this.indices[i].writable,
-            format: function(value) {
-              let num = Number(value).toFixed(this.decimal);
-              var x = String(value).indexOf('.') + 1; //小数点的位置
-              var y = String(value).length - x; //小数的位数
-              if(isNaN(num) || num == 0){
-                return value;
-              }else if(y >= 0){
-                return Number(value).toFixed(this.decimal);
-              }
-            },
-          })
-      }
+      // for(var i in this.indices){
+      //   // this.columns[i] =
+      //   // console.log(i,this.indices[i])
+      //   this.columns.push({
+      //       name: i,
+      //       label: this.indices[i].name,
+      //       field: i,
+      //       align: 'left',
+      //       // required: true,
+      //       sortable: true,
+      //       decimal: this.indices[i].decimal,
+      //       writable: this.indices[i].writable,
+      //       format: function(value) {
+      //         let num = Number(value).toFixed(this.decimal);
+      //         var x = String(value).indexOf('.') + 1; //小数点的位置
+      //         var y = String(value).length - x; //小数的位数
+      //         if(isNaN(num) || num == 0){
+      //           return value;
+      //         }else if(y >= 0){
+      //           return Number(value).toFixed(this.decimal);
+      //         }
+      //       },
+      //     })
+      // }
 
       // console.log(JSON.stringify(this.columns))
       // console.log(this.columns)
@@ -669,52 +743,61 @@
 			/* Object.keys(this.indices).forEach((v) =>{
 				console.log(`this.$set(this.total,'${v}',${v})`)
 			}) */
-			// this.json = require('202005.json');
+			// this.show = require('202005.json');
 		},
 		mounted:function() {
-			console.time('fetch')
-			fetch('https://test.hopuc.com/indices/api/api.php')
-			.then(rec => rec.json())
-			.then(rec => {
-				if(rec.success){
-					// console.log(rec);
-					// console.time(1)
-					console.log(rec.data)
-					this.allData = rec.data
-					/* let json = this.allData.filter((v) => {
-						// console.log(v.raw_qty_wet,i)
-						let month = 5
-						let days = (m) => new Date(2020,m,0).getDate()
-						var date = v.date
-						if(v.date.indexOf('月') != -1){
-							date = v.date.replace("月","-").replace("日","")
-						}
-						var currentMonth = date.split('-')[0]
-						var currentDay = date.split('-')[1]
-						// check = (v.date.split('-')[0] == month && v.date.split('-')[1] != days(month) || (v.date.split('-')[1] != days(month)-1) && (v.date.split('-')[0] == month-1 && v.date.split('-')[1] == days(month-1)) || v.date.split('-')[1] == days(month-1)-1)
+      this.show = this.showData
+      this.loading = false
 
-						var check = (currentMonth == month && (currentDay != days(month) && currentDay != days(month)-1)) || (currentMonth == month-1 && (currentDay == days(month-1) || currentDay == days(month-1)-1))
-						// console.log(days(month-1),days(month-1)-1)
-						// console.log(currentMonth,currentDay)
-						return check && v.raw_qty_wet > 0 && v.date !== '总计'
-					})
-					console.log(json); */
-					this.json = this.allData
-					console.time('for')
-					this.json.forEach((v,i) =>{
-						this.calculateData(i)
-					})
-					this.totalData('json')
-					//this.echarts()
-					//this.echartsSelect()
-					// console.timeEnd(1)
-					console.timeEnd('for')
-				}else{
-					this.notice('获取失败','云端数据获取失败')
-				}
-				this.loading = false
-				console.timeEnd('fetch')
-			})
+			// fetch('https://test.hopuc.com/indices/api/api.php')
+			// .then(rec => rec.json())
+			// .then(rec => {
+			// 	if(rec.success){
+			// 		// console.log(rec);
+			// 		// console.time(1)
+			// 		console.log(rec.data)
+			// 		this.allData = rec.data
+   //        console.time('for')
+   //        for(var i = 1; i <= 12; i++){
+   //          // console.log(i)
+   //          var value = this.allData.filter((v) => {
+   //            // console.log(v.raw_qty_wet,i)
+   //            let month = i
+   //            let days = (m) => new Date(2020,m,0).getDate()
+   //            var date = v.date
+   //            if(v.date.indexOf('月') != -1){
+   //              date = v.date.replace("月","-").replace("日","")
+   //            }
+   //            var currentMonth = date.split('-')[0]
+   //            var currentDay = date.split('-')[1]
+   //            var check = (currentMonth == month && (currentDay != days(month) && currentDay != days(month)-1)) || (currentMonth == month-1 && (currentDay == days(month-1) || currentDay == days(month-1)-1))
+   //            return check && v.raw_qty_wet > 0 && v.date !== '总计'
+   //          })
+   //          // var obj = {[i]:value}
+   //          // console.log(obj)
+   //          // console.log(this.monthData)
+   //          // this.monthData.push(obj)
+   //          this.monthOptions.push({label:i+'月',value:i})
+   //          this.monthData.push(value)
+   //        }
+   //        console.log(JSON.stringify(this.monthData[5]))
+
+			// 		this.show = this.allData
+   //        // this.show = this.monthData[4]
+			// 		this.show.forEach((v,i) =>{
+			// 			this.calculateData(i)
+			// 		})
+			// 		this.totalData('show')
+			// 		//this.echarts()
+			// 		//this.echartsSelect()
+			// 		// console.timeEnd(1)
+			// 		console.timeEnd('for')
+			// 	}else{
+			// 		// this.notice('获取失败','云端数据获取失败')
+			// 		console.log('云端数据获取失败')
+			// 	}
+
+
 		},
 		/* filters:{
 			rounding: function(value, decimal){
@@ -729,235 +812,117 @@
 			}
 		}, */
 		methods: {
+      getData: function(){
+        console.time('fetch')
+        var [...arr] = this.indicesData
+        this.allData = arr
+        console.time('for')
+        for(var i = 1; i <= 12; i++){
+           var value = this.allData.filter((v) => {
+             let month = i
+             let days = (m) => new Date(2020,m,0).getDate()
+             var date = v.date
+             if(v.date.indexOf('月') != -1){
+               date = v.date.replace("月","-").replace("日","")
+             }
+             var currentMonth = date.split('-')[0]
+             var currentDay = date.split('-')[1]
+             var check = (currentMonth == month && (currentDay != days(month) && currentDay != days(month)-1)) || (currentMonth == month-1 && (currentDay == days(month-1) || currentDay == days(month-1)-1))
+             return check && v.raw_qty_wet > 0 && v.date !== '总计'
+           })
+           this.monthOptions.push({label:i+'月',value:i})
+           this.monthData.push(value)
+         }
+
+         // console.log(JSON.stringify(this.monthData[5]))
+
+          this.show = this.allData
+          // this.show = this.monthData[4]
+          this.show.forEach((v,i) =>{
+            this.calculateData(i)
+          })
+          this.totalData('show')
+          console.timeEnd('for')
+
+        	this.loading = false
+        	console.timeEnd('fetch')
+      },
       getSelectedString: function(){
         // setTimeout(()=>{this.totalData('select')},8000)
         // this.totalData('select')
         // console.log('aa')
-        //return this.selected.length === 0 ? '' : `${this.selected.length} record${this.selected.length > 1 ? 's' : ''} selected of ${this.json.length}`
+        //return this.selected.length === 0 ? '' : `${this.selected.length} record${this.selected.length > 1 ? 's' : ''} selected of ${this.show.length}`
       },
-			echarts:function(){
-				let cuc_cu = this.$echarts.init(document.getElementById('chart-cuc-cu'))
-				cuc_cu.setOption({
-					title: { text: '铜精矿品位' },
-					tooltip: {},
-					xAxis: {
-						data: this.json.map(v => {
-							if(v.date!=='总计'){
-								return v.date + v.shift
-							}
-						})
-					},
-					yAxis: {
-						scale:true,
-					},
-					series: [{
-						name: '品位',
-						type: 'line',
-						color: ['#e93'],
-						data: this.json.map(v => {
-							if(v.date!=='总计'){
-								return v.cuc_cu
-							}
-						}),
-						markLine : {
-							symbol:"none",//去掉警戒线最后面的箭头
-							label:{
-								position:"end", //将警示值放在哪个位置，三个值“start”,"middle","end" 开始	中点 结束
-								formatter: "{b}:{c}"
-							},
-							data : [{
-								silent: true, //鼠标悬停事件	true没有，false有
-								lineStyle:{ //警戒线的样式，虚实	颜色
-									type:"solid",
-									color:"#39e"
-								},
-								name: '目标值',
-								yAxis: 20
-							},{
-								silent: true, //鼠标悬停事件	true没有，false有
-								lineStyle:{ //警戒线的样式，虚实	颜色
-									type:"solid",
-									color:"#c33"
-								},
-								name: '完成值',
-								yAxis: this.total.cuc_cu
-							}]
-						},
-					}],
-				});
-
-				let cuc_rec = this.$echarts.init(document.getElementById('chart-cuc-rec'))
-				cuc_rec.setOption({
-					title: { text: '铜精矿回收率' },
-					tooltip: {},
-					xAxis: {
-						data: this.json.map(v => {
-							if(v.date!=='总计'){
-								return v.date + v.shift
-							}
-						}),
-						/* axisLine: {
-							lineStyle: {
-								color: '#e93', // X轴及其文字颜色
-							}
-						} */
-					},
-					yAxis: {
-						scale:true,
-					},
-					series: [{
-						name: '回收率',
-						type: 'line',
-						color: ['#e93'],
-						data: this.json.map(v => {
-							if(v.date!=='总计'){
-								return v.cuc_rec.toFixed(2)
-							}
-						}),
-						markLine : {
-							symbol:"none",//去掉警戒线最后面的箭头
-							label:{
-								position:"end", //将警示值放在哪个位置，三个值“start”,"middle","end"	开始 中点 结束
-								formatter: "{b}:{c}"
-							},
-							data : [{
-								silent: true, //鼠标悬停事件	true没有，false有
-								lineStyle:{ //警戒线的样式，虚实	颜色
-									type:"solid",
-									color:"#39e"
-								},
-								name: '目标值',
-								yAxis: 92.5
-							},{
-								silent: true, //鼠标悬停事件	true没有，false有
-								lineStyle:{ //警戒线的样式，虚实	颜色
-									type:"solid",
-									color:"#c33"
-								},
-								name: '完成值',
-								yAxis: this.total.cuc_rec
-							}]
-						},
-					}],
-				});
-
-			},
-			echartsSelect:function(){
-				let chart = this.$echarts.init(document.getElementById('chart'))
-				chart.setOption({
-					title: {
-						// text: this.indices[this.chart].alias,
-					},
-					tooltip: {},
-					xAxis: {
-						data: this.json.map(v => {
-							if(v.date!=='总计'){
-								return v.date + v.shift
-							}
-						})
-					},
-					yAxis: {
-						scale: true,
-					},
-					series: [{
-						name: this.indices[this.chart].name,
-						type: 'line',
-						color: ['#e93'],
-						data: this.json.map(v => {
-							if(v.date!=='总计'){
-								if(v[this.chart]){
-									return Number(v[this.chart]).toFixed(this.indices[this.chart].decimal)
-								}
-							}
-						}),
-						markLine : {
-							symbol:"none",//去掉警戒线最后面的箭头
-							label:{
-								position:"end", //将警示值放在哪个位置，三个值“start”,"middle","end" 开始	中点 结束
-								formatter: "{b}:{c}"
-							},
-							data : [{
-								silent: true, //鼠标悬停事件	true没有，false有
-								lineStyle:{ //警戒线的样式，虚实	颜色
-									type:"solid",
-									color:"#39e"
-								},
-								name: '目标值',
-								yAxis: this.indices[this.chart].target
-							},{
-								silent: true, //鼠标悬停事件	true没有，false有
-								lineStyle:{ //警戒线的样式，虚实	颜色
-									type:"solid",
-									color:"#c33"
-								},
-								name: '完成值',
-								yAxis: Number(this.total[this.chart]).toFixed(this.indices[this.chart].decimal)?Number(this.total[this.chart]).toFixed(this.indices[this.chart].decimal):''
-							}]
-						},
-					}],
-				});
-			},
 			calculateData: function(i) {
-				// this.json.forEach((v,i) =>{
-					// console.log(this.json[i]);
+				// this.show.forEach((v,i) =>{
+					// console.log(this.show[i]);
 				// })
 				// console.time(i)
 
-				this.json[i].id = this.json[i].date.replace("月","-").replace("日","-") + (this.json[i].shift=='早班'?0:1);
+				this.show[i].id = this.show[i].date.replace("月","-").replace("日","-") + (this.show[i].shift=='早班'?0:1);
 				//原矿干量
-        this.json[i].raw_qty = this.json[i].raw_qty_wet * (1 - this.json[i].raw_mc / 100);
+        this.show[i].raw_qty = this.show[i].raw_qty_wet * (1 - this.show[i].raw_mc / 100);
 				//台时量
-				this.json[i].oph = this.json[i].duration!=null?this.json[i].raw_qty / (Number(this.json[i].duration.toString().split(':')[0]) + Number(this.json[i].duration.toString().split(':')[1]/60)):0;
+				this.show[i].oph = this.show[i].duration!=null?this.show[i].raw_qty / (Number(this.show[i].duration.toString().split(':')[0]) + Number(this.show[i].duration.toString().split(':')[1]/60)):0;
 
 				//原矿铜金属量
-				this.json[i].raw_qty_metal_cu = this.json[i].raw_qty * (this.json[i].raw_cu / 100);
+				this.show[i].raw_qty_metal_cu = this.show[i].raw_qty * (this.show[i].raw_cu / 100);
 				//原矿铁金属量
-				this.json[i].raw_qty_metal_fe = this.json[i].raw_qty * (this.json[i].raw_fe / 100);
+				this.show[i].raw_qty_metal_fe = this.show[i].raw_qty * (this.show[i].raw_fe / 100);
 
 				//铜回收率
-				this.json[i].cuc_rec = 100 * this.json[i].cuc_cu * (this.json[i].raw_cu - this.json[i].cut_cu) / (this.json[i].raw_cu * (this.json[i].cuc_cu - this.json[i].cut_cu));
+				this.show[i].cuc_rec = 100 * this.show[i].cuc_cu * (this.show[i].raw_cu - this.show[i].cut_cu) / (this.show[i].raw_cu * (this.show[i].cuc_cu - this.show[i].cut_cu));
 				//铜精矿金属量
-				this.json[i].cuc_qty_metal = this.json[i].cuc_rec * this.json[i].raw_qty_metal_cu / 100;
+				this.show[i].cuc_qty_metal = this.show[i].cuc_rec * this.show[i].raw_qty_metal_cu / 100;
 				//铜精矿产量
-				this.json[i].cuc_qty = this.json[i].cuc_qty_metal / (this.json[i].cuc_cu / 100);
+				this.show[i].cuc_qty = this.show[i].cuc_qty_metal / (this.show[i].cuc_cu / 100);
 
 
 				//铜尾矿金属量
-				this.json[i].cut_qty_metal = this.json[i].raw_qty_metal_cu - (this.json[i].cuc_qty * this.json[i].cuc_cu / 100);
+				this.show[i].cut_qty_metal = this.show[i].raw_qty_metal_cu - (this.show[i].cuc_qty * this.show[i].cuc_cu / 100);
 				//铜尾矿产量
-				this.json[i].cut_qty = (this.json[i].cut_qty_metal / (this.json[i].cut_cu/100))
+				this.show[i].cut_qty = (this.show[i].cut_qty_metal / (this.show[i].cut_cu/100))
 				//铜尾矿铁金属量
-				this.json[i].cut_qty_metal_fe = this.json[i].raw_qty_metal_fe - (this.json[i].cuc_qty * this.json[i].cuc_fe / 100);
+				this.show[i].cut_qty_metal_fe = this.show[i].raw_qty_metal_fe - (this.show[i].cuc_qty * this.show[i].cuc_fe / 100);
 				//铜尾矿铁品位
-				this.json[i].cut_fe = 100 * this.json[i].cut_qty_metal_fe / this.json[i].cut_qty;
-				// console.log(this.json[i].cut_qty_metal_fe , this.json[i].cut_qty)
+				this.show[i].cut_fe = 100 * this.show[i].cut_qty_metal_fe / this.show[i].cut_qty;
+				// console.log(this.show[i].cut_qty_metal_fe , this.show[i].cut_qty)
 
 				//铁回收率
-				this.json[i].fec_rec = 100 * this.json[i].fec_fe * (this.json[i].cut_fe - this.json[i].fet_fe) / (this.json[i].cut_fe * (this.json[i].fec_fe - this.json[i].fet_fe));
+				this.show[i].fec_rec = 100 * this.show[i].fec_fe * (this.show[i].cut_fe - this.show[i].fet_fe) / (this.show[i].cut_fe * (this.show[i].fec_fe - this.show[i].fet_fe));
 				//铁精矿金属量
-				this.json[i].fec_qty_metal = this.json[i].fec_rec * this.json[i].cut_qty_metal_fe / 100;
+				this.show[i].fec_qty_metal = this.show[i].fec_rec * this.show[i].cut_qty_metal_fe / 100;
 				//铁精矿产量
-				this.json[i].fec_qty = this.json[i].fec_qty_metal / (this.json[i].fec_fe / 100)
+				this.show[i].fec_qty = this.show[i].fec_qty_metal / (this.show[i].fec_fe / 100)
 				// console.timeEnd(i)
 			},
 			totalData: function(e) {
+        // console.log(e)
 				console.time('totalData')
-        let index = this.json.findIndex(v => v.date == '总计')
-        // console.log(index)
-        if(index>0){
-        	this.json.splice(index, 1)
-        }
+        // var index = this.show.findIndex(v => v.date == '总计')
+        // // console.log(index)
+        // if(index>0){
+        // 	this.show.splice(index, 1)
+        // }
+        this.show = this.show.filter((v) => {
+          // console.log(v.id)
+          return v.id !== 'total'
+        })
 				var arr
 				if(e=='select'){
-					// [...arr] = this.selected
-					arr = this.selected
-          let index = arr.findIndex(v => v.date == '总计')
-          if(index>0){
-            arr.splice(index, 1)
-          }
-				}else if(e=='json'){
-					arr = this.json
+					[...arr] = this.selected
+					// arr = this.selected
+          arr = arr.filter((v) => {
+            // console.log(v.id)
+            return v.id !== 'total'
+          })
+				}else if(e=='show'){
+					arr = this.show
 				}
+        if(arr.length==0){
+          console.timeEnd('totalData')
+          return false
+        }
 
 				//时长
 				let duration = arr.reduce((total, v) => {
@@ -1111,8 +1076,9 @@
 				let fec_rec = 100 * fec_qty_metal / cut_qty_metal_fe
 
 				let date = '总计'
-				// let shift = this.selectedData.length? this.selectedData.length + '条数据' : this.json.length + '条数据'
-				let shift = this.selected.length? this.selected.length + '条数据' : this.json.length + '条数据'
+				// let shift = this.selectedData.length? this.selectedData.length + '条数据' : this.show.length + '条数据'
+				// let shift = this.selected.length? this.selected.length + '条数据' : this.show.length + '条数据'
+        let shift = arr.length + '条数据'
 
 				this.total = {
           id:'total',
@@ -1147,40 +1113,10 @@
 					fet_nfe,
 				}
 
-				// console.log(this.total)
-				this.json.push(this.total)
+				console.log('this.total',this.total)
+				this.show.push(this.total)
 				console.timeEnd('totalData')
 			},
-			/* tableName:function(k,v){
-				if(this.type[k.split('_')[0]]){
-					if(this.alias&&v.alias){
-						return v.alias
-					}else{
-						return this.type[k.split('_')[0]] + '' + v.name
-					}
-				}else{
-					if(this.alias&&v.alias){
-						return v.alias
-					}else{
-						return v.name
-					}
-				}
-			}, */
-			/* tableName:function(e){
-				if(this.type[e.split('_')[0]]){
-					if(this.alias&&this.indices[e].alias){
-						return this.indices[e].alias
-					}else{
-						return this.type[e.split('_')[0]] + '' + this.indices[e].name
-					}
-				}else{
-					if(this.alias&&this.indices[e].alias){
-						return this.indices[e].alias
-					}else{
-						return this.indices[e].name
-					}
-				}
-			}, */
 			deleteRow: function(index, rows) {
 				rows.splice(index, 1)
 				this.edit = null
@@ -1203,8 +1139,8 @@
 				}else{
 					shift = '白班'
 				}
-				this.json.splice(-1,0,{date:d,shift})
-				this.editRow(this.json.length-2)
+				this.show.splice(-1,0,{date:d,shift})
+				this.editRow(this.show.length-2)
 				this.scrollBottom()
 				this.index = 'table'
 				this.panel = true
@@ -1227,8 +1163,8 @@
 				// console.log(key)
 				// console.log(obj)
 
-				this.json.splice(-1,0,obj)
-				// this.editRow(this.json.length-2)
+				this.show.splice(-1,0,obj)
+				// this.editRow(this.show.length-2)
 				// this.scrollBottom()
 				this.index = 'table'
 				// this.panel = true
@@ -1258,7 +1194,7 @@
 					headers: {
 					'Content-Type': 'application/x-www-form-urlencoded'
 					},
-					body: "data="+JSON.stringify(this.json)
+					body: "data="+JSON.stringify(this.show)
 				})
 				.then(res => res.json())
 				.then(data => {
@@ -1300,7 +1236,7 @@
 						return this.indices[v].name
 					}) */
 					line = '序号,日期,班次,处理量,台时量,铜原矿品位,铜精矿品位,铜过滤品位,铜尾矿品位,选铜回收率,铁原矿品位,铁精矿品位,铁过滤品位,铁尾磁性铁,非磁性铁,选铁回收率\r\n'
-					this.json.forEach((v,i) => {
+					this.show.forEach((v,i) => {
 						// line += `${i+1},${v.date},${v.shift},${v.raw_qty},${v.oph},${v.raw_cu},${v.cuc_cu},${v.cuc_deh_cu},${v.cut_cu},${v.cuc_rec},${v.cut_fe},${v.fec_fe},${v.fec_deh_fe},${v.fet_mfe},${v.fec_rec},${v.fet_nfe}\r\n`
 						line += `${i+1},`
 						arr.forEach((name)=>{
@@ -1317,7 +1253,7 @@
 					})
 					line = name.join(',')+'\r\n'
 					console.log(line)
-					this.json.forEach((v) => {
+					this.show.forEach((v) => {
 						// line += '\r\n'
 						arr.forEach((name)=>{
 							line += this.indices[name].decimal?Number(v[name]).toFixed(this.indices[name].decimal)+',':v[name]+',',
@@ -1357,12 +1293,12 @@
 							// console.log(v.raw_qty_wet,i)
 							return v.raw_qty_wet > 0
 						})
-						// this.json = rec
-						this.json = json
-						this.json.forEach((v,i) =>{
+						// this.show = rec
+						this.show = json
+						this.show.forEach((v,i) =>{
 							this.calculateData(i)
 						})
-						this.totalData('json')
+						this.totalData('show')
 						// this.echarts()
 						// this.echartsSelect()
 						this.drawer = false

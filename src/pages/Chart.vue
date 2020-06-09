@@ -24,14 +24,15 @@
   import 'echarts/lib/component/tooltip'
   import 'echarts/lib/component/markLine'
   export default {
+    props: ['indices','showData','columns','total'],
     data(){
       return{
-        name: 'App',
+        name: 'Chart',
         components: {
         	// HelloWorld
         },
-        chart: 'fec_fe',
-        indices: {
+        chart: {name:'fec_fe',label:'铁精矿品位',decimal:2},
+        /* indices: {
         	date: {
         		name: '日期',
         		alias: '日期',
@@ -290,59 +291,68 @@
         		target: 0,
         		unit: '%',
         	},
-        },
-        json: [],
-        columns:[],
-        total: {},
+        },*/
+        show: [],
+        // columns:[],
+        // total: {},
       }
     },
-
+    watch:{
+      showData:function(n){
+        this.show = n
+        this.echarts()
+      },
+      chart:function(){
+        this.echarts()
+      }
+    },
     created:function(){
 
-     for(var i in this.indices){
-       // console.log(i)
-       this.columns.push({
-         name: i,
-         label: this.indices[i].name,
-         field: i,
-         align: 'left',
-         // required: true,
-         sortable: true,
-         decimal: this.indices[i].decimal,
-         format: function(value) {
-           let num = Number(value).toFixed(this.decimal);
-           var x = String(value).indexOf('.') + 1; //小数点的位置
-           var y = String(value).length - x; //小数的位数
-           if(isNaN(num) || num == 0){
-             return value;
-           }else if(y >= 0){
-             return Number(value).toFixed(this.decimal);
-           }
-         },
-       })
-     }
+     // for(var i in this.indices){
+     //   // console.log(i)
+     //   this.columns.push({
+     //     name: i,
+     //     label: this.indices[i].name,
+     //     field: i,
+     //     align: 'left',
+     //     // required: true,
+     //     sortable: true,
+     //     decimal: this.indices[i].decimal,
+     //     format: function(value) {
+     //       let num = Number(value).toFixed(this.decimal);
+     //       var x = String(value).indexOf('.') + 1; //小数点的位置
+     //       var y = String(value).length - x; //小数的位数
+     //       if(isNaN(num) || num == 0){
+     //         return value;
+     //       }else if(y >= 0){
+     //         return Number(value).toFixed(this.decimal);
+     //       }
+     //     },
+     //   })
+     // }
 
     },
     mounted:function(){
-
-      console.time('fetch')
-      fetch('https://test.hopuc.com/indices/api/api.php')
-      .then(rec => rec.json())
-      .then(rec => {
-      	if(rec.success){
-      		// console.log(rec.data)
-      		this.json =  rec.data
-      		/* this.json.forEach((v,i) =>{
-      			this.calculateData(i)
-      		}) */
-          this.totalData('json')
-          this.echarts()
-      	}else{
-      		// this.notice('获取失败','云端数据获取失败')
-      	}
-      	console.timeEnd('fetch')
-      })
-      console.log(echarts)
+      this.show = this.showData
+      this.echarts()
+      // console.time('fetch')
+      // fetch('https://test.hopuc.com/indices/api/api.php')
+      // .then(rec => rec.json())
+      // .then(rec => {
+      // 	if(rec.success){
+      // 		// console.log(rec.data)
+      // 		this.show =  rec.data
+      // 		/* this.show.forEach((v,i) =>{
+      // 			this.calculateData(i)
+      // 		}) */
+      //     // this.totalData('show')
+      //     this.echarts()
+      // 	}else{
+      // 		// this.notice('获取失败','云端数据获取失败')
+      // 	}
+      // })
+      // // console.log(echarts)
+      // console.timeEnd('fetch')
 
     },
     methods:{
@@ -352,7 +362,7 @@
       		title: { text: '铜精矿品位' },
       		tooltip: {},
       		xAxis: {
-      			data: this.json.map(v => {
+      			data: this.show.map(v => {
       				if(v.date!=='总计'){
       					return v.date + v.shift
       				}
@@ -365,7 +375,7 @@
       			name: '品位',
       			type: 'line',
       			color: ['#e93'],
-      			data: this.json.map(v => {
+      			data: this.show.map(v => {
       				if(v.date!=='总计'){
       					return v.cuc_cu
       				}
@@ -402,7 +412,7 @@
       		title: { text: '铜精矿回收率' },
       		tooltip: {},
       		xAxis: {
-      			data: this.json.map(v => {
+      			data: this.show.map(v => {
       				if(v.date!=='总计'){
       					return v.date + v.shift
       				}
@@ -420,7 +430,7 @@
       			name: '回收率',
       			type: 'line',
       			color: ['#e93'],
-      			data: this.json.map(v => {
+      			data: this.show.map(v => {
       				if(v.date!=='总计'){
       					return v.cuc_rec.toFixed(2)
       				}
@@ -459,7 +469,7 @@
       		},
       		tooltip: {},
       		xAxis: {
-      			data: this.json.map(v => {
+      			data: this.show.map(v => {
       				if(v.date!=='总计'){
       					return v.date + v.shift
       				}
@@ -469,13 +479,13 @@
       			scale: true,
       		},
       		series: [{
-      			name: this.indices[this.chart].name,
+      			name: this.chart.label,
       			type: 'line',
       			color: ['#e93'],
-      			data: this.json.map(v => {
+      			data: this.show.map(v => {
       				if(v.date!=='总计'){
-      					if(v[this.chart]){
-      						return Number(v[this.chart]).toFixed(this.indices[this.chart].decimal)
+      					if(v[this.chart.name]){
+      						return Number(v[this.chart.name]).toFixed(this.chart.decimal)
       					}
       				}
       			}),
@@ -492,7 +502,7 @@
       						color:"#39e"
       					},
       					name: '目标值',
-      					yAxis: this.indices[this.chart].target
+      					yAxis: this.indices[this.chart.name].target
       				},{
       					silent: true, //鼠标悬停事件	true没有，false有
       					lineStyle:{ //警戒线的样式，虚实	颜色
@@ -500,24 +510,24 @@
       						color:"#c33"
       					},
       					name: '完成值',
-      					yAxis: Number(this.total[this.chart]).toFixed(this.indices[this.chart].decimal)?Number(this.total[this.chart]).toFixed(this.indices[this.chart].decimal):''
+      					yAxis: Number(this.total[this.chart.name]).toFixed(this.chart.decimal)?Number(this.total[this.chart.name]).toFixed(this.chart.decimal):''
       				}]
       			},
       		}],
       	});
       },
-      totalData: function(e) {
+      /* totalData: function(e) {
       	console.time('totalData')
-        const index = this.json.findIndex(v => v.date == '总计')
+        const index = this.show.findIndex(v => v.date == '总计')
         // console.log(index)
         if(index>0){
-        	this.json.splice(index, 1)
+        	this.show.splice(index, 1)
         }
       	var obj;
       	if(e=='select'){
       		obj = this.selected
-      	}else if(e=='json'){
-      		obj = this.json
+      	}else if(e=='show'){
+      		obj = this.show
       	}
 
       	//时长
@@ -672,8 +682,8 @@
       	let fec_rec = 100 * fec_qty_metal / cut_qty_metal_fe
 
       	let date = '总计'
-      	// let shift = this.selectedData.length? this.selectedData.length + '条数据' : this.json.length + '条数据'
-      	// let shift = this.selected.length? this.selected.length + '条数据' : this.json.length + '条数据'
+      	// let shift = this.selectedData.length? this.selectedData.length + '条数据' : this.show.length + '条数据'
+      	// let shift = this.selected.length? this.selected.length + '条数据' : this.show.length + '条数据'
 
       	this.total = {
           id:'total',
@@ -709,9 +719,9 @@
       	}
 
       	// console.log(this.total)
-      	this.json.push(this.total)
+      	this.show.push(this.total)
       	console.timeEnd('totalData')
-      },
+      },*/
     }
   }
 
